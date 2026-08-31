@@ -3,157 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>社費繳費紀錄</title>
+  <title>社費繳費紀錄（檢視）</title>
   <style>
     :root {
-      --bg: #f4f6fb;
-      --card: #ffffff;
-      --text: #1f2933;
-      --muted: #7b8794;
-      --border: #e4e7eb;
-      --primary: #3b82f6;
-      --primary-dark: #2563eb;
-      --danger: #ef4444;
-      --success: #10b981;
+      --bg: #f4f6fb; --card: #ffffff; --text: #1f2933; --muted: #7b8794;
+      --border: #e4e7eb; --primary: #3b82f6; --danger: #ef4444; --success: #10b981;
       --shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
+    body { margin: 0; font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5; }
     .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
     h1 { font-size: 24px; margin: 0 0 4px; }
-    .sub { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+    .card { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
 
-    .card {
-      background: var(--card);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .row { display: flex; gap: 10px; }
-    input[type=text] {
-      flex: 1;
-      padding: 12px 14px;
-      font-size: 16px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      outline: none;
-      transition: border-color .15s;
-    }
-    input[type=text]:focus { border-color: var(--primary); }
-    button {
-      font-size: 15px;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 18px;
-      cursor: pointer;
-      transition: background .15s, opacity .15s;
-    }
-    .btn-primary { background: var(--primary); color: #fff; white-space: nowrap; }
-    .btn-primary:hover { background: var(--primary-dark); }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-
-    .stats { display: flex; gap: 12px; margin-bottom: 16px; }
-    .stat {
-      flex: 1;
-      background: var(--card);
-      border-radius: 12px;
-      padding: 14px;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-    .stat .num { font-size: 26px; font-weight: 700; color: var(--primary); }
+    .stats { display: flex; gap: 12px; margin-bottom: 8px; }
+    .stat { flex: 1; background: var(--card); border-radius: 12px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
+    .stat .num { font-size: 26px; font-weight: 700; }
+    .stat.paid .num { color: var(--success); }
+    .stat.unpaid .num { color: var(--danger); }
+    .stat.total .num { color: var(--primary); }
     .stat .lbl { font-size: 13px; color: var(--muted); }
+    .bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin: 4px 0 20px; }
+    .bar > div { height: 100%; background: var(--success); width: 0; transition: width .3s; }
 
+    .search input { width: 100%; padding: 12px 14px; font-size: 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; }
+    .search input:focus { border-color: var(--primary); }
     .search { margin-bottom: 14px; }
-    .search input { width: 100%; }
 
+    .sec-title { font-size: 14px; font-weight: 700; margin: 18px 4px 6px; display: flex; align-items: center; gap: 8px; }
+    .sec-title .cnt { color: var(--muted); font-weight: 500; }
     ul { list-style: none; margin: 0; padding: 0; }
-    li {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 4px;
-      border-bottom: 1px solid var(--border);
-    }
+    li { display: flex; align-items: center; justify-content: space-between; padding: 13px 4px; border-bottom: 1px solid var(--border); }
     li:last-child { border-bottom: none; }
     .name { font-weight: 600; font-size: 16px; }
     .time { font-size: 12px; color: var(--muted); margin-top: 2px; }
     .left { display: flex; align-items: center; gap: 12px; }
-    .dot {
-      width: 34px; height: 34px; border-radius: 50%;
-      background: var(--success); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; flex-shrink: 0;
-    }
-    .del {
-      background: transparent; color: var(--danger);
-      font-size: 13px; padding: 6px 10px;
-    }
-    .del:hover { background: #fef2f2; }
-
-    .empty { text-align: center; color: var(--muted); padding: 30px 0; }
-    .banner {
-      background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412;
-      padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 20px;
-    }
-    .banner code { background: #ffedd5; padding: 1px 5px; border-radius: 4px; }
-    .toast {
-      position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
-      background: #1f2933; color: #fff; padding: 10px 18px; border-radius: 999px;
-      font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s;
-    }
-    .toast.show { opacity: 1; }
+    .dot { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .dot.paid { background: var(--success); }
+    .dot.unpaid { background: #cbd5e1; }
+    .tag { font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+    .tag.paid { background: #d1fae5; color: #065f46; }
+    .tag.unpaid { background: #fee2e2; color: #991b1b; }
+    .empty { text-align: center; color: var(--muted); padding: 24px 0; }
+    .foot { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>💰 社費繳費紀錄</h1>
-    <p class="sub">打名字就能記錄誰交過社費了</p>
-
-    <div id="config-warning" class="banner" style="display:none;">
-      ⚠️ 還沒設定資料庫。請打開 <code>index.html</code>,把最下面的 <code>firebaseConfig</code> 換成你自己的設定。詳細步驟看 <code>README.md</code>。
-    </div>
+    <p class="sub">👀 檢視模式（此頁只能看，不能修改）</p>
 
     <div class="stats">
-      <div class="stat"><div class="num" id="stat-total">0</div><div class="lbl">已繳費人數</div></div>
-      <div class="stat"><div class="num" id="stat-today">0</div><div class="lbl">今天新增</div></div>
+      <div class="stat paid"><div class="num" id="s-paid">0</div><div class="lbl">已繳費</div></div>
+      <div class="stat unpaid"><div class="num" id="s-unpaid">0</div><div class="lbl">還沒繳</div></div>
+      <div class="stat total"><div class="num" id="s-total">0</div><div class="lbl">總人數</div></div>
     </div>
-
-    <div class="card">
-      <div class="row">
-        <input type="text" id="nameInput" placeholder="輸入名字,例如：王小明" autocomplete="off" />
-        <button class="btn-primary" id="addBtn">✔ 記錄已繳費</button>
-      </div>
-    </div>
+    <div class="bar"><div id="bar"></div></div>
 
     <div class="card">
       <div class="search"><input type="text" id="searchInput" placeholder="🔍 搜尋名字…" autocomplete="off" /></div>
-      <ul id="list"></ul>
-      <div class="empty" id="empty">目前還沒有人繳費紀錄</div>
-    </div>
-  </div>
 
-  <div class="toast" id="toast"></div>
+      <div class="sec-title" style="color:var(--danger)">🔴 還沒繳 <span class="cnt" id="c-unpaid"></span></div>
+      <ul id="list-unpaid"></ul>
+      <div class="empty" id="empty-unpaid" style="display:none">大家都繳了 🎉</div>
+
+      <div class="sec-title" style="color:var(--success)">🟢 已繳費 <span class="cnt" id="c-paid"></span></div>
+      <ul id="list-paid"></ul>
+      <div class="empty" id="empty-paid" style="display:none">還沒有人繳費</div>
+    </div>
+
+    <div class="foot" id="foot">載入中…</div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, deleteDoc, doc,
-      onSnapshot, query, orderBy, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // ======================================================================
-    //  👇👇👇  把這一段換成你自己的 Firebase 設定（步驟看 README.md） 👇👇👇
-    // ======================================================================
     const firebaseConfig = {
       apiKey: "AIzaSyD_zGVvkYuSF1HSwo5mLslgQ_PBiz4pkso",
       authDomain: "money-739a2.firebaseapp.com",
@@ -163,108 +90,60 @@
       appId: "1:81035140984:web:b37b23e65e43175633f28d",
       measurementId: "G-D3F73DPGZ6"
     };
-    // ======================================================================
 
     const $ = (id) => document.getElementById(id);
-    const listEl = $("list"), emptyEl = $("empty"), toastEl = $("toast");
-    let members = [];
-
-    // 還沒設定就顯示提醒
-    if (firebaseConfig.apiKey === "PASTE_YOUR_API_KEY") {
-      $("config-warning").style.display = "block";
-    }
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const col = collection(db, "fees");
-
-    function toast(msg) {
-      toastEl.textContent = msg;
-      toastEl.classList.add("show");
-      setTimeout(() => toastEl.classList.remove("show"), 1800);
-    }
+    let members = [];
 
     function fmtTime(ts) {
       if (!ts) return "";
       const d = ts.toDate ? ts.toDate() : new Date(ts);
       return d.toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
     }
-
-    function isToday(ts) {
-      if (!ts) return false;
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
-      const n = new Date();
-      return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
-    }
+    const byName = (a, b) => a.name.localeCompare(b.name, "zh-Hant");
 
     function render() {
       const kw = $("searchInput").value.trim().toLowerCase();
-      const shown = members.filter(m => m.name.toLowerCase().includes(kw));
+      const match = (m) => m.name.toLowerCase().includes(kw);
+      const paid = members.filter(m => m.paid);
+      const unpaid = members.filter(m => !m.paid);
 
-      $("stat-total").textContent = members.length;
-      $("stat-today").textContent = members.filter(m => isToday(m.paidAt)).length;
+      $("s-paid").textContent = paid.length;
+      $("s-unpaid").textContent = unpaid.length;
+      $("s-total").textContent = members.length;
+      $("bar").style.width = members.length ? (paid.length / members.length * 100) + "%" : "0%";
+      $("c-paid").textContent = paid.length ? `（${paid.length}）` : "";
+      $("c-unpaid").textContent = unpaid.length ? `（${unpaid.length}）` : "";
 
-      listEl.innerHTML = "";
-      emptyEl.style.display = shown.length ? "none" : "block";
-      if (!shown.length && members.length && kw) emptyEl.textContent = "找不到符合的名字";
-      else emptyEl.textContent = "目前還沒有人繳費紀錄";
+      const su = unpaid.filter(match).sort(byName);
+      const sp = paid.filter(match).sort((a, b) => (b.paidAt?.seconds || 0) - (a.paidAt?.seconds || 0));
+      $("empty-unpaid").style.display = su.length ? "none" : "block";
+      $("empty-paid").style.display = sp.length ? "none" : "block";
 
-      for (const m of shown) {
+      $("list-unpaid").innerHTML = "";
+      for (const m of su) {
         const li = document.createElement("li");
-        li.innerHTML = `
-          <div class="left">
-            <div class="dot">✓</div>
-            <div><div class="name"></div><div class="time">${fmtTime(m.paidAt)}</div></div>
-          </div>
-          <button class="del">刪除</button>`;
+        li.innerHTML = `<div class="left"><div class="dot unpaid">—</div><div class="name"></div></div><span class="tag unpaid">未繳</span>`;
         li.querySelector(".name").textContent = m.name;
-        li.querySelector(".del").onclick = () => removeMember(m);
-        listEl.appendChild(li);
+        $("list-unpaid").appendChild(li);
+      }
+      $("list-paid").innerHTML = "";
+      for (const m of sp) {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="left"><div class="dot paid">✓</div><div><div class="name"></div><div class="time">${fmtTime(m.paidAt)}</div></div></div><span class="tag paid">已繳</span>`;
+        li.querySelector(".name").textContent = m.name;
+        $("list-paid").appendChild(li);
       }
     }
 
-    async function addMember() {
-      const name = $("nameInput").value.trim();
-      if (!name) { toast("請先輸入名字"); return; }
-      if (members.some(m => m.name === name)) {
-        if (!confirm(`「${name}」已經記錄過了，還要再新增一筆嗎？`)) return;
-      }
-      $("addBtn").disabled = true;
-      try {
-        await addDoc(col, { name, paidAt: serverTimestamp() });
-        $("nameInput").value = "";
-        toast(`已記錄：${name}`);
-      } catch (e) {
-        toast("儲存失敗，請檢查資料庫設定");
-        console.error(e);
-      } finally {
-        $("addBtn").disabled = false;
-        $("nameInput").focus();
-      }
-    }
-
-    async function removeMember(m) {
-      if (!confirm(`確定刪除「${m.name}」的繳費紀錄嗎？`)) return;
-      try {
-        await deleteDoc(doc(db, "fees", m.id));
-        toast("已刪除");
-      } catch (e) {
-        toast("刪除失敗");
-        console.error(e);
-      }
-    }
-
-    // 即時同步：任何人更新資料庫，畫面自動更新
-    onSnapshot(query(col, orderBy("paidAt", "desc")), (snap) => {
+    onSnapshot(col, (snap) => {
       members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      $("foot").textContent = members.length ? `共 ${members.length} 位社員` : "目前還沒有社員名單";
       render();
-    }, (err) => {
-      console.error(err);
-      toast("連不到資料庫，請檢查設定與權限");
-    });
+    }, (err) => { console.error(err); $("foot").textContent = "⚠️ 連不到資料庫"; });
 
-    $("addBtn").onclick = addMember;
-    $("nameInput").addEventListener("keydown", (e) => { if (e.key === "Enter") addMember(); });
     $("searchInput").addEventListener("input", render);
   </script>
 </body>

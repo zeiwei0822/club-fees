@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>社費繳費紀錄（管理）</title>
+  <style>
+    :root {
+      --bg: #f4f6fb; --card: #ffffff; --text: #1f2933; --muted: #7b8794;
+      --border: #e4e7eb; --primary: #3b82f6; --primary-dark: #2563eb;
+      --danger: #ef4444; --success: #10b981; --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, "Segoe UI", "Microsoft JhengHei", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5; }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 24px; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 0 0 20px; }
+    .card { background: var(--card); border-radius: 14px; box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+    .card h3 { margin: 0 0 12px; font-size: 15px; }
+
+    .row { display: flex; gap: 10px; }
+    input[type=text], textarea { width: 100%; padding: 12px 14px; font-size: 16px; border: 1px solid var(--border); border-radius: 10px; outline: none; font-family: inherit; }
+    input[type=text]:focus, textarea:focus { border-color: var(--primary); }
+    textarea { resize: vertical; min-height: 90px; }
+    button { font-size: 15px; font-weight: 600; border: none; border-radius: 10px; padding: 12px 18px; cursor: pointer; transition: background .15s, opacity .15s; }
+    .btn-primary { background: var(--primary); color: #fff; white-space: nowrap; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ghost { background: #f1f5f9; color: var(--text); margin-top: 10px; width: 100%; }
+    .btn-ghost:hover { background: #e2e8f0; }
+    .hint { font-size: 12px; color: var(--muted); margin: 8px 2px 0; }
+
+    .stats { display: flex; gap: 12px; margin-bottom: 8px; }
+    .stat { flex: 1; background: var(--card); border-radius: 12px; padding: 14px; text-align: center; box-shadow: var(--shadow); }
+    .stat .num { font-size: 26px; font-weight: 700; }
+    .stat.paid .num { color: var(--success); }
+    .stat.unpaid .num { color: var(--danger); }
+    .stat.total .num { color: var(--primary); }
+    .stat .lbl { font-size: 13px; color: var(--muted); }
+    .bar { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin: 4px 0 20px; }
+    .bar > div { height: 100%; background: var(--success); width: 0; transition: width .3s; }
+
+    .search input { margin-bottom: 14px; }
+    .sec-title { font-size: 14px; font-weight: 700; margin: 18px 4px 6px; display: flex; align-items: center; gap: 8px; }
+    .sec-title .cnt { color: var(--muted); font-weight: 500; }
+    ul { list-style: none; margin: 0; padding: 0; }
+    li { display: flex; align-items: center; justify-content: space-between; padding: 11px 4px; border-bottom: 1px solid var(--border); gap: 8px; }
+    li:last-child { border-bottom: none; }
+    .name { font-weight: 600; font-size: 16px; }
+    .time { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .dot { width: 34px; height: 34px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .dot.paid { background: var(--success); }
+    .dot.unpaid { background: #cbd5e1; }
+    .acts { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-sm { font-size: 13px; padding: 7px 11px; }
+    .btn-pay { background: var(--success); color: #fff; }
+    .btn-undo { background: #f1f5f9; color: var(--text); }
+    .btn-del { background: transparent; color: var(--danger); }
+    .btn-del:hover { background: #fef2f2; }
+    .empty { text-align: center; color: var(--muted); padding: 24px 0; }
+    .banner { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
+    .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #1f2933; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🛠️ 社費管理</h1>
+    <p class="sub">管理模式 · 可新增、標記、刪除</p>
+
+    <div class="banner">🔗 給大家看的檢視版網址：把網址結尾的 <b>admin.html</b> 拿掉即可（<span id="viewlink"></span>）。這頁請自己留著就好。</div>
+
+    <div class="stats">
+      <div class="stat paid"><div class="num" id="s-paid">0</div><div class="lbl">已繳費</div></div>
+      <div class="stat unpaid"><div class="num" id="s-unpaid">0</div><div class="lbl">還沒繳</div></div>
+      <div class="stat total"><div class="num" id="s-total">0</div><div class="lbl">總人數</div></div>
+    </div>
+    <div class="bar"><div id="bar"></div></div>
+
+    <div class="card">
+      <h3>➕ 新增社員</h3>
+      <div class="row">
+        <input type="text" id="nameInput" placeholder="輸入名字，例如：王小明" autocomplete="off" />
+        <button class="btn-primary" id="addBtn">加入名單</button>
+      </div>
+      <p class="hint">新加入的人預設是「還沒繳」，繳了再按標記。</p>
+    </div>
+
+    <div class="card">
+      <h3>📋 一次匯入整批社員</h3>
+      <textarea id="bulkInput" placeholder="一行一個名字，例如：&#10;王小明&#10;陳大文&#10;林美美"></textarea>
+      <button class="btn-ghost" id="bulkBtn">批次匯入</button>
+      <p class="hint">已存在的名字會自動略過，不會重複。</p>
+    </div>
+
+    <div class="card">
+      <div class="search"><input type="text" id="searchInput" placeholder="🔍 搜尋名字…" autocomplete="off" /></div>
+
+      <div class="sec-title" style="color:var(--danger)">🔴 還沒繳 <span class="cnt" id="c-unpaid"></span></div>
+      <ul id="list-unpaid"></ul>
+      <div class="empty" id="empty-unpaid" style="display:none">大家都繳了 🎉</div>
+
+      <div class="sec-title" style="color:var(--success)">🟢 已繳費 <span class="cnt" id="c-paid"></span></div>
+      <ul id="list-paid"></ul>
+      <div class="empty" id="empty-paid" style="display:none">還沒有人繳費</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
+      onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD_zGVvkYuSF1HSwo5mLslgQ_PBiz4pkso",
+      authDomain: "money-739a2.firebaseapp.com",
+      projectId: "money-739a2",
+      storageBucket: "money-739a2.firebasestorage.app",
+      messagingSenderId: "81035140984",
+      appId: "1:81035140984:web:b37b23e65e43175633f28d",
+      measurementId: "G-D3F73DPGZ6"
+    };
+
+    const $ = (id) => document.getElementById(id);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const col = collection(db, "fees");
+    const toastEl = $("toast");
+    let members = [];
+
+    $("viewlink").textContent = location.href.replace(/admin\.html.*$/, "index.html");
+
+    function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("show"); setTimeout(() => toastEl.classList.remove("show"), 1800); }
+    function fmtTime(ts) {
+      if (!ts) return "";
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    }
+    const byName = (a, b) => a.name.localeCompare(b.name, "zh-Hant");
+
+    function render() {
+      const kw = $("searchInput").value.trim().toLowerCase();
+      const match = (m) => m.name.toLowerCase().includes(kw);
+      const paid = members.filter(m => m.paid);
+      const unpaid = members.filter(m => !m.paid);
+
+      $("s-paid").textContent = paid.length;
+      $("s-unpaid").textContent = unpaid.length;
+      $("s-total").textContent = members.length;
+      $("bar").style.width = members.length ? (paid.length / members.length * 100) + "%" : "0%";
+      $("c-paid").textContent = paid.length ? `（${paid.length}）` : "";
+      $("c-unpaid").textContent = unpaid.length ? `（${unpaid.length}）` : "";
+
+      const su = unpaid.filter(match).sort(byName);
+      const sp = paid.filter(match).sort((a, b) => (b.paidAt?.seconds || 0) - (a.paidAt?.seconds || 0));
+      $("empty-unpaid").style.display = su.length ? "none" : "block";
+      $("empty-paid").style.display = sp.length ? "none" : "block";
+
+      $("list-unpaid").innerHTML = "";
+      for (const m of su) {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="left"><div class="dot unpaid">—</div><div class="name"></div></div>
+          <div class="acts"><button class="btn-sm btn-pay">✔ 標記已繳</button><button class="btn-sm btn-del">刪</button></div>`;
+        li.querySelector(".name").textContent = m.name;
+        li.querySelector(".btn-pay").onclick = () => setPaid(m, true);
+        li.querySelector(".btn-del").onclick = () => removeMember(m);
+        $("list-unpaid").appendChild(li);
+      }
+      $("list-paid").innerHTML = "";
+      for (const m of sp) {
+        const li = document.createElement("li");
+        li.innerHTML = `<div class="left"><div class="dot paid">✓</div><div><div class="name"></div><div class="time">${fmtTime(m.paidAt)}</div></div></div>
+          <div class="acts"><button class="btn-sm btn-undo">改回未繳</button><button class="btn-sm btn-del">刪</button></div>`;
+        li.querySelector(".name").textContent = m.name;
+        li.querySelector(".btn-undo").onclick = () => setPaid(m, false);
+        li.querySelector(".btn-del").onclick = () => removeMember(m);
+        $("list-paid").appendChild(li);
+      }
+    }
+
+    async function addMember() {
+      const name = $("nameInput").value.trim();
+      if (!name) { toast("請先輸入名字"); return; }
+      if (members.some(m => m.name === name)) { toast(`「${name}」已經在名單裡了`); return; }
+      $("addBtn").disabled = true;
+      try {
+        await addDoc(col, { name, paid: false, paidAt: null, createdAt: serverTimestamp() });
+        $("nameInput").value = "";
+        toast(`已加入：${name}`);
+      } catch (e) { toast("儲存失敗"); console.error(e); }
+      finally { $("addBtn").disabled = false; $("nameInput").focus(); }
+    }
+
+    async function bulkImport() {
+      const lines = $("bulkInput").value.split("\n").map(s => s.trim()).filter(Boolean);
+      if (!lines.length) { toast("請先貼上名字"); return; }
+      const existing = new Set(members.map(m => m.name));
+      const seen = new Set();
+      const toAdd = lines.filter(n => !existing.has(n) && !seen.has(n) && seen.add(n));
+      if (!toAdd.length) { toast("這些名字都已經在名單裡了"); return; }
+      $("bulkBtn").disabled = true;
+      try {
+        await Promise.all(toAdd.map(name => addDoc(col, { name, paid: false, paidAt: null, createdAt: serverTimestamp() })));
+        $("bulkInput").value = "";
+        toast(`已匯入 ${toAdd.length} 人`);
+      } catch (e) { toast("匯入失敗"); console.error(e); }
+      finally { $("bulkBtn").disabled = false; }
+    }
+
+    async function setPaid(m, paid) {
+      try { await updateDoc(doc(db, "fees", m.id), { paid, paidAt: paid ? serverTimestamp() : null });
+        toast(paid ? `${m.name} 已標記繳費` : `${m.name} 改回未繳`); }
+      catch (e) { toast("更新失敗"); console.error(e); }
+    }
+
+    async function removeMember(m) {
+      if (!confirm(`確定要把「${m.name}」從名單刪除嗎？`)) return;
+      try { await deleteDoc(doc(db, "fees", m.id)); toast("已刪除"); }
+      catch (e) { toast("刪除失敗"); console.error(e); }
+    }
+
+    onSnapshot(col, (snap) => { members = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); },
+      (err) => { console.error(err); toast("連不到資料庫"); });
+
+    $("addBtn").onclick = addMember;
+    $("nameInput").addEventListener("keydown", (e) => { if (e.key === "Enter") addMember(); });
+    $("bulkBtn").onclick = bulkImport;
+    $("searchInput").addEventListener("input", render);
+  </script>
+</body>
+</html>
